@@ -1,0 +1,10 @@
+@use '../globals/g-mixins' as *;
+@use '../globals/g-functions' as *;
+
+.news-archive{
+
+    .container{
+        @include custom-container;
+        padding-top: pxrem(150) !important;
+    }
+}

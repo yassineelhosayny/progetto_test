@@ -1,0 +1,27 @@
+@use "../globals/g-mixins" as *;
+@use "../globals/g-functions" as *;
+@use "../globals/g-variables" as *;
+@use 'sass-mq' as *;
+
+.credits-section {
+    .container {
+        @include custom-container;
+
+        .first-image {
+
+            @include mq(lg) {
+                max-width: pxrem(300);
+                width: col-width(6);
+            }
+        }
+
+        .last-image {
+            max-width: 50%;
+            
+            @include mq(lg){
+                max-width: pxrem(200);
+                width: col-width(3);
+            }
+        }
+    }
+}

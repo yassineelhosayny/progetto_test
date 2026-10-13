@@ -1,0 +1,21 @@
+@use 'sass:color';
+
+$color-primary: #273948;
+
+$color-black: #000;
+$color-white: #fff;
+$color-blue-dark: #273948;
+$color-blue-darker: #111B24;
+$color-blue-light: #49AAAE;
+$color-blue-lighter: rgba($color-blue-light, 0.5);
+
+// Breakpoints
+$sm:  576px;
+$md:  768px;
+$lg:  1024px;
+$xl:  1200px;
+$xxl: 1400px;
+$xxxl: 1600px;
+
+$mobile-gutter: 24px;
+$grid-columns: 24;

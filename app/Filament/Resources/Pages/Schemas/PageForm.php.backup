@@ -1,0 +1,174 @@
+<?php
+
+namespace App\Filament\Resources\Pages\Schemas;
+
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\Builder;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
+use Illuminate\Support\Str;
+use App\Models\Page;
+use App\Services\TemplateManager;
+
+class PageForm
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make('Basic Information')
+                ->schema([
+                    Grid::make(2)
+                        ->schema([
+                            TextInput::make('title.it')
+                                ->label('Title (IT)')
+                                ->required()
+                                ->maxLength(255)
+                                ->live()
+                                ->afterStateUpdated(function (string $operation, $state, $set) {
+                                    if ($operation !== 'create') {
+                                        return;
+                                    }
+                                    $set('slug', Str::slug($state));
+                                }),
+
+                            TextInput::make('title.en')
+                                ->label('Title (EN)')
+                                ->maxLength(255),
+
+                            TextInput::make('slug')
+                                ->label('URL Slug')
+                                ->required()
+                                ->maxLength(255)
+                                ->unique('pages', 'slug')
+                                ->rules(['alpha_dash'])
+                                ->helperText('URL-friendly version of the title. Will be auto-generated if left empty.'),
+
+                            Select::make('template')
+                                ->label('Template')
+                                ->options(TemplateManager::getTemplateOptions())
+                                ->default('default')
+                                ->required()
+                                ->live()
+                                ->helperText('Seleziona il template per determinare i componenti disponibili'),
+                        ]),
+
+                    Grid::make(1)
+                        ->schema([
+                            Textarea::make('description.it')
+                                ->label('Description (IT)')
+                                ->rows(4)
+                                ->maxLength(500)
+                                ->helperText('Brief description for search results and social sharing'),
+
+                            Textarea::make('description.en')
+                                ->label('Description (EN)')
+                                ->rows(4)
+                                ->maxLength(500)
+                                ->helperText('Brief description for search results and social sharing'),
+                        ]),
+                ]),
+
+            Section::make('Publishing')
+                ->schema([
+                    Grid::make(2)
+                        ->schema([
+                            Select::make('status')
+                                ->label('Status')
+                                ->options([
+                                    'draft' => 'Draft',
+                                    'published' => 'Published',
+                                    'scheduled' => 'Scheduled',
+                                ])
+                                ->default('draft')
+                                ->required()
+                                ->live()
+                                ->helperText('Control the publication status of this page'),
+
+                            DateTimePicker::make('published_at')
+                                ->label('Publish Date')
+                                ->helperText('Leave empty to publish immediately when status is Published')
+                                ->hidden(fn ($get) => $get('status') !== 'scheduled'),
+
+                            Toggle::make('is_homepage')
+                                ->label('Set as Homepage')
+                                ->helperText('Only one page can be the homepage. Setting this will remove the homepage flag from other pages.')
+                                ->columnSpan(2),
+                        ]),
+                ]),
+
+            Section::make('Content Blocks IT')
+                ->schema([
+                    Builder::make('blocks.it')
+                        ->label('Page Content (IT)')
+                        ->blocks(function ($get) {
+                            $template = $get('template') ?? 'default';
+                            return TemplateManager::getBlocksForTemplate($template);
+                        })
+                        ->collapsible()
+                        ->cloneable()
+                        ->addActionLabel('Add Content Block'),
+                ]),
+
+            Section::make('Content Blocks EN')
+                ->schema([
+
+                    Builder::make('blocks.en')
+                        ->label('Page Content (EN)')
+                        ->blocks(function ($get) {
+                            $template = $get('template') ?? 'default';
+                            return TemplateManager::getBlocksForTemplate($template);
+                        })
+                        ->collapsible()
+                        ->cloneable()
+                        ->addActionLabel('Add Content Block'),
+                ]),
+
+            Section::make('SEO & Meta')
+                ->schema([
+                    Grid::make(2)
+                        ->schema([
+                            TextInput::make('meta_title.it')
+                                ->label('Meta Title (IT)')
+                                ->maxLength(60)
+                                ->helperText('Optimal: 50-60 characters. Leave empty to use page title.'),
+
+                            TextInput::make('meta_title.en')
+                                ->label('Meta Title (EN)')
+                                ->maxLength(60)
+                                ->helperText('Optimal: 50-60 characters. Leave empty to use page title.'),
+
+                            Textarea::make('meta_description.it')
+                                ->label('Meta Description (IT)')
+                                ->rows(3)
+                                ->maxLength(160)
+                                ->helperText('Optimal: 140-160 characters. Leave empty to use page description.'),
+
+                            Textarea::make('meta_description.en')
+                                ->label('Meta Description (EN)')
+                                ->rows(3)
+                                ->maxLength(160)
+                                ->helperText('Optimal: 140-160 characters. Leave empty to use page description.'),
+
+                            TextInput::make('meta_keywords.it')
+                                ->label('Meta Keywords (IT)')
+                                ->helperText('Comma-separated keywords. Generally not used by modern search engines.')
+                                ->placeholder('keyword1, keyword2, keyword3'),
+
+                            TextInput::make('meta_keywords.en')
+                                ->label('Meta Keywords (EN)')
+                                ->helperText('Comma-separated keywords. Generally not used by modern search engines.')
+                                ->placeholder('keyword1, keyword2, keyword3'),
+                        ]),
+                ]),
+
+            
+        ]);
+    }
+}

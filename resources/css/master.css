@@ -1,0 +1,24 @@
+@import "swiper/css";
+@import "swiper/css/navigation";
+@import "swiper/css/pagination";
+@import "tailwindcss";
+
+@source '../../../../vendor/awcodes/matinee/resources/**/*.blade.php';
+@source '../../../../vendor/biostate/filament-menu-builder/resources/views/**/*';
+
+@theme {
+  --color-black: #000;
+  --color-white: #fff;
+  --color-primary: #111B24;
+  --color-blue-dark: #273948;
+  --color-blue-darker: #111B24;
+  --color-blue-light: #49AAAE;
+  --color-blue-lighter: #5DBEC2;
+}
+
+/* Custom vars / overrides */
+:root {
+  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  scroll-behavior: smooth;
+}

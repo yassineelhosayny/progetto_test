@@ -1,0 +1,41 @@
+@use "../globals/g-functions" as *;
+@use "../globals/g-variables" as *;
+@use "sass-mq" as *;
+
+.swiper--hero {
+    .swiper-slide {
+        &:after {
+            background: linear-gradient(transparent 0%, #111b24 100%);
+            bottom: 0;
+            content: "";
+            height: 20vh;
+            left: 0;
+            position: absolute;
+            width: 100vw;
+        }
+
+        .container {
+            @include make-col-offset(2.5);
+
+            @include mq(lg) {
+                padding-top: 25vh !important;
+            }
+
+            .slide-title {
+                @include make-mobile-container;
+
+                @include mq(lg) {
+                    // @include make-col(6);
+                }
+
+                h2 {
+
+                    strong {
+                        color: $color-white;
+                        font-weight: 600;
+                    }
+                }
+            }
+        }
+    }
+}

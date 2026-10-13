@@ -1,0 +1,14 @@
+@use "sass-mq" as * ;
+@use "../globals/g-variables" as * ;
+@use "../globals/g-functions" as * ;
+
+
+main{
+
+    .main-content{
+        
+        .container{
+            padding-top: pxrem(100);
+        }
+    }
+}

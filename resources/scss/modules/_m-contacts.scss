@@ -1,0 +1,28 @@
+@use "../globals/g-mixins" as *;
+@use "../globals/g-functions" as *;
+@use "../globals/g-variables" as *;
+@use "../base/b-typography" as *;
+@use 'sass-mq' as *;
+
+.contact-template {
+    .container {
+        @include custom-container;
+        padding-top: 0 !important;
+
+        .column{
+
+            p{
+
+                &:first-child{
+                    @include heading-6;
+                    font-weight: 500;
+                    margin-bottom: 16px;
+                    
+                    @include mq(lg){
+                        margin-bottom: 30px;
+                    }
+                }
+            }
+        }
+    }
+}

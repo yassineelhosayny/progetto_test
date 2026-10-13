@@ -1,0 +1,20 @@
+@use "../globals/g-variables" as *;
+@use "../globals/g-functions" as *;
+@use "../globals/g-mixins" as *;
+
+.banner-block {
+    .container {
+        max-width: 100%;
+        padding-top: 0 !important;
+
+        .content {
+            @include custom-container;
+
+            .text-blue-darker {
+                p {
+                    color: $color-blue-darker;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,121 @@
+{
+  "form_config": {
+    "name": "dynamic_page_form",
+    "title": "Dynamic Page Form",
+    "description": "Example of JSON-based Filament form"
+  },
+  "fields": [
+    {
+      "type": "tabs",
+      "name": "content_tabs",
+      "tabs": [
+        {
+          "label": "🇮🇹 Italiano",
+          "fields": [
+            {
+              "type": "text",
+              "name": "title.it",
+              "label": "Titolo",
+              "required": true,
+              "maxLength": 255,
+              "placeholder": "Inserisci il titolo in italiano"
+            },
+            {
+              "type": "textarea",
+              "name": "description.it",
+              "label": "Descrizione",
+              "rows": 4,
+              "maxLength": 500,
+              "helper": "Descrizione breve della pagina"
+            },
+            {
+              "type": "select",
+              "name": "status.it",
+              "label": "Stato",
+              "required": true,
+              "options": {
+                "draft": "Bozza",
+                "published": "Pubblicato",
+                "archived": "Archiviato"
+              }
+            }
+          ]
+        },
+        {
+          "label": "🇬🇧 English",
+          "fields": [
+            {
+              "type": "text",
+              "name": "title.en",
+              "label": "Title",
+              "required": false,
+              "maxLength": 255,
+              "placeholder": "Enter title in English"
+            },
+            {
+              "type": "textarea",
+              "name": "description.en",
+              "label": "Description",
+              "rows": 4,
+              "maxLength": 500,
+              "helper": "Brief page description"
+            },
+            {
+              "type": "select",
+              "name": "status.en",
+              "label": "Status",
+              "options": {
+                "draft": "Draft",
+                "published": "Published",
+                "archived": "Archived"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "label": "Settings",
+      "collapsible": true,
+      "fields": [
+        {
+          "type": "toggle",
+          "name": "is_featured",
+          "label": "Featured Page",
+          "default": false
+        },
+        {
+          "type": "date",
+          "name": "published_at",
+          "label": "Publication Date",
+          "format": "Y-m-d"
+        },
+        {
+          "type": "file",
+          "name": "featured_image",
+          "label": "Featured Image",
+          "acceptedTypes": ["image/jpeg", "image/png", "image/webp"],
+          "maxSize": 2048
+        }
+      ]
+    },
+    {
+      "type": "grid",
+      "columns": 2,
+      "fields": [
+        {
+          "type": "text",
+          "name": "meta_title",
+          "label": "Meta Title",
+          "maxLength": 60
+        },
+        {
+          "type": "text",
+          "name": "meta_keywords",
+          "label": "Meta Keywords"
+        }
+      ]
+    }
+  ]
+}

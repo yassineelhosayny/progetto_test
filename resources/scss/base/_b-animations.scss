@@ -1,0 +1,55 @@
+.animate-bottom,
+.animate-left,
+.animate-right,
+.animate-top {
+  will-change: opacity, transform;
+}
+
+.animate-fade {
+  will-change: opacity;
+}
+
+.animate-image{
+  overflow: hidden;
+}
+
+.pin-spacer{
+  height: calc(100dvh + pxrem(500)) !important;
+  // padding: 0 0 pxrem(200) !important;
+
+  .section--uffizi-section{
+    // height: calc(100% - pxrem(200));
+  }
+}
+
+@keyframes openMenu {
+  0% {
+    opacity: 0;
+    transform: translateY(-200px);
+  }
+  90% {
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes closeMenu {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-200px);
+  }
+}

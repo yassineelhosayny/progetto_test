@@ -1,0 +1,10 @@
+// @forward "external/";
+@forward "globals/";
+@forward "base/";
+@forward "layouts/";
+@forward "components/";
+@forward "modules/";
+
+.container{
+    max-width: 100%
+}

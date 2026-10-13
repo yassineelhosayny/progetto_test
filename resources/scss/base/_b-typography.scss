@@ -1,0 +1,305 @@
+@use '../globals/g-variables' as *;
+@use '../globals/g-mixins' as *;
+@use '../globals/g-functions' as *;
+@use "sass-mq" as * ;
+
+// Family
+$font-primary: 'poppins', sans-serif;
+$font-secondary: 'figtree';
+
+// Size paragraph
+$font-xsmall:       pxrem(11);
+$font-small:        pxrem(14);
+$font-normal:       pxrem(16);
+$font-medium:       pxrem(21);
+$font-large:        pxrem(25);
+$font-xlarge:       pxrem(30);
+
+// Size heading
+$font-h1:       pxrem(60);
+$font-h2:       pxrem(45);
+$font-h3:       pxrem(30);
+$font-h4:       pxrem(24);
+$font-h5:       pxrem(20);
+$font-h6:       pxrem(18);
+
+// Menu
+$font-menu:             pxrem(13);
+$font-menu-mobile:      pxrem(13);
+
+// Weight
+$font-weight-light:      300; 
+$font-weight-regular:    400;
+$font-weight-medium:     500;
+$font-weight-semibold:   600;
+$font-weight-bold:       700;
+
+// Mixin
+
+@mixin basicTypographyStyle() {
+    margin: 0;
+}
+
+/**
+* Paragraphs
+*/
+
+// 30px
+@mixin paragraph-xl($color: $color-primary, $font-weight: $font-weight-regular) {
+    @include basicTypographyStyle;
+    font-family: $font-primary;
+    font-size: $font-xlarge;
+    font-weight: $font-weight;
+    line-height: pxrem(32);
+    letter-spacing: pxrem(-0.3);
+}
+
+// 25px
+@mixin paragraph-lg($color: $color-primary, $font-weight: $font-weight-regular) {
+    @include basicTypographyStyle;
+    font-family: $font-primary;
+    font-size: $font-large;
+    font-weight: $font-weight;
+    line-height: pxrem(28);
+    letter-spacing: pxrem(-0.25);
+    
+}
+
+// 21px
+@mixin paragraph-md($color: $color-primary, $font-weight: $font-weight-regular) {
+    @include basicTypographyStyle;
+    font-family: $font-primary;
+    font-size: $font-medium;
+    font-weight: $font-weight;
+    line-height: pxrem(25);
+    letter-spacing: pxrem(-0.21);
+    
+}
+
+// 19px
+@mixin paragraph($color: $color-white, $font-weight: $font-weight-regular) {
+    @include basicTypographyStyle;
+    font-family: $font-primary;
+    font-size: $font-normal;
+    font-weight: $font-weight;
+    line-height: 1.8;
+    // letter-spacing: pxrem(-0.16);
+    
+}
+
+// 14px
+@mixin paragraph-sm($color: $color-primary, $font-weight: $font-weight-regular) {
+    @include basicTypographyStyle;
+    font-family: $font-primary;
+    font-size: $font-small;
+    font-weight: $font-weight;
+    line-height: pxrem(17);
+    letter-spacing: pxrem(-0.14);
+    
+}
+
+// 12px
+@mixin paragraph-xs($color: $color-primary, $font-weight: $font-weight-regular) {
+    @include basicTypographyStyle;
+    font-family: $font-primary;
+    font-size: $font-xsmall;
+    font-weight: $font-weight;
+    line-height: pxrem(15);
+    letter-spacing: pxrem(-0.12);
+    
+}
+
+/**
+* Headings
+*/
+
+// 120px
+@mixin heading-1($color: $color-primary, $font-weight: $font-weight-regular) {
+    @include basicTypographyStyle;
+    font-family: $font-primary;
+    font-size: $font-h5;
+    font-weight: $font-weight;
+    line-height: 60px;
+    letter-spacing: pxrem(-2.25);
+    
+
+    @include mq(lg){
+        font-size: $font-h1;
+        line-height: pxrem(120);
+    }
+}
+
+
+// 90px
+@mixin heading-2($color: $color-primary, $font-weight: 600) {
+    @include basicTypographyStyle;
+    font-family: $font-primary;
+    font-size: $font-h2;
+    font-weight: $font-weight;
+    line-height: 1.25;
+    letter-spacing: pxrem(-1.5);
+    
+    text-transform: uppercase;
+}
+
+// 75px
+@mixin heading-3($color: $color-primary, $font-weight: 700) {
+    @include basicTypographyStyle;
+    font-family: $font-primary;
+    font-size: $font-h3;
+    font-weight: $font-weight;
+    line-height: 1.25;
+    letter-spacing: pxrem(-1);
+
+    @include mq(lg){
+        font-size: $font-h3;
+        font-weight: $font-weight;
+        line-height: 40px;
+        letter-spacing: pxrem(-1);
+    }
+    
+}
+
+// 36px
+@mixin heading-4($color: $color-primary, $font-weight: 600) {
+    @include basicTypographyStyle;
+    font-family: $font-primary;
+    font-size: pxrem(28);
+    font-weight: $font-weight;
+    line-height: 1.25;
+
+    @include mq(lg){
+        font-size: $font-h4;
+        font-weight: $font-weight;
+        line-height: 1.25;
+    }
+    
+}
+
+// 45px
+@mixin heading-5($color: $color-primary, $font-weight: 600) {
+    @include basicTypographyStyle;
+    font-family: $font-primary;
+    font-size: $font-h5;
+    font-weight: $font-weight;
+    line-height: 30px;
+    // letter-spacing: pxrem(-2.25);
+    
+}
+
+// 30px
+@mixin heading-6($color: $color-primary, $font-weight: 600) {
+    @include basicTypographyStyle;
+    font-family: $font-primary;
+    font-size: $font-normal;
+    font-weight: $font-weight;
+    line-height: 1.5;
+
+    @include mq(lg){
+        font-size: $font-h6;
+        font-weight: $font-weight;
+        line-height: 1.5;
+    }
+    
+}
+
+// 20px
+@mixin heading-7($color: $color-primary, $font-weight: 600) {
+    @include basicTypographyStyle;
+    font-family: $font-primary;
+    // font-size: $font-h7;
+    font-weight: $font-weight;
+    line-height: pxrem(22);
+    // letter-spacing: pxrem(-1);
+    
+}
+
+// 15px
+@mixin heading-8($color: $color-primary, $font-weight: 400) {
+    @include basicTypographyStyle;
+    font-family: $font-primary;
+    // font-size: $font-h8;
+    font-weight: $font-weight;
+    line-height: 1.8;
+    // letter-spacing: pxrem(-0.45);
+    
+}
+
+@mixin font-menu() {
+    font-family: $font-primary;
+    font-size: $font-menu-mobile;
+    font-weight: 700;
+    line-height: 22px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+
+    @include mq(lg){
+        font-size: $font-menu;
+        text-shadow: 2px 2px 5px rgba(0, 0, 0, .8);
+        text-transform: none;
+    }
+}
+
+
+p {
+    @include paragraph;
+}
+
+h1,
+.h1{
+    @include heading-1;
+}
+
+h2,
+.h2{
+    @include heading-2;
+}
+
+h3,
+.h3{
+    @include heading-3;
+}
+
+h4,
+.h4{
+    @include heading-4;
+}
+
+h5,
+.h5{
+    @include heading-5;
+}
+
+h6,
+.h6{
+    @include heading-6;
+}
+
+.h7{
+    @include heading-8;
+
+    @include mq(lg){
+        @include heading-7;
+    }
+}
+
+.h8{
+    @include heading-8;
+}
+
+.normal{
+    @include paragraph;
+}
+
+.xsmall{
+    @include paragraph-xs;
+}
+
+input,
+textarea{
+    @include paragraph-md;
+}
+
+.font-menu {
+    @include font-menu;
+}

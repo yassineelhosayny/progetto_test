@@ -1,0 +1,25 @@
+@use '../globals/g-functions' as *;
+@use '../globals/g-variables' as *;
+@use '../globals/g-mixins' as *;
+@use 'sass-mq' as *;
+
+.sectors-block {
+    // background: $color-blue-darker;
+
+    .container {
+
+        .logos-container {
+            padding-left: pxrem(8);
+            padding-right: pxrem(8);
+            
+            @include mq(lg) {
+                @include make-col(18);
+                @include make-col-offset(3);
+            }
+        }
+
+        .indent {
+            @include custom-container;
+        }
+    }
+}

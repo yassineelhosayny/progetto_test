@@ -1,0 +1,19 @@
+@use '../globals/g-functions' as *;
+@use '../globals/g-variables' as *;
+@use '../globals/g-mixins' as *;
+@use '../base/b-typography' as *;
+
+.section-focus-three-columns {
+
+    .container{
+        @include custom-container;
+
+        .description{
+
+            p{
+                @include heading-8;
+                font-weight: 400;
+            }
+        }
+    }
+}

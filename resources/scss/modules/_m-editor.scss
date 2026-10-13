@@ -1,0 +1,19 @@
+@use "../globals/g-variables" as *;
+@use "../globals/g-functions" as *;
+@use "../globals/g-mixins" as *;
+@use "sass-mq" as *;
+
+.editor-section{
+    // background-color: $color-blue-darker;
+
+    .editor-container{
+        @include custom-container;
+
+        .blue-light{
+            
+            p{
+                color: $color-blue-light;
+            }
+        }
+    }
+}

@@ -1,0 +1,21 @@
+.image-navigation {
+    
+    .next {
+        opacity: 1;
+    }
+
+    .prev {
+        opacity: 0.5;
+    }
+
+    &.translated {
+        
+        .next {
+            opacity: .5;
+        }
+
+        .prev {
+            opacity: 1;
+        }
+    }
+}

@@ -1,0 +1,25 @@
+@use '../globals/g-mixins' as *;
+@use '../globals/g-variables' as *;
+@use '../globals/g-functions' as *;
+@use '../base/b-typography' as *;
+@use 'sass-mq' as *;
+
+.section-intro-two-columns {
+
+    .container{
+        @include custom-container();
+        padding-top: pxrem(200) !important;
+        
+        @include mq(lg){
+            padding-top: pxrem(150) !important;
+        }
+
+        .regular,
+        .italic{
+            
+            p{
+                @include heading-8;
+            }
+        }
+    }
+}

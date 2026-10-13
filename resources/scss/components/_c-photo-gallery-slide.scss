@@ -1,0 +1,27 @@
+@use "../globals/g-functions" as *;
+@use "../globals/g-variables" as *;
+@use "sass-mq" as *;
+
+.swiper--photo-gallery {
+    .swiper-slide {
+        
+        @include mq(lg){
+            height: 200px;
+        }
+    }
+}
+
+.swiper-pagination--photo-gallery {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+
+    .swiper-pagination-bullet{
+        background-color: $color-white;
+
+        &.active{
+            background-color: $color-blue-light;
+        }
+    }
+}

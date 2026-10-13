@@ -1,0 +1,26 @@
+@use '../globals/g-functions' as *;
+
+.swiper-pagination {
+    align-items: center;
+    bottom: 0 !important;
+    display: flex;
+    height: 50px;
+    justify-content: center;
+    left: unset !important;
+    margin: 0 auto;
+    top: unset !important;
+    width: 100vw;
+
+    .swiper-pagination-bullet {
+        background-color: rgba(255, 255, 255, 0.5);
+        border-radius: 0;
+        width: pxrem(30);
+        height: pxrem(3);
+        opacity: 1;
+        transition: background-color 0.3s;
+
+        &.active {
+            background-color: #FFFFFF;
+        }
+    }
+}

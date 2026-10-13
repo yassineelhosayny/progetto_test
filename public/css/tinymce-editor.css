@@ -1,0 +1,11 @@
+#tinymce iframe{
+    height: 50%;
+    margin: 0 auto;
+    max-width: 50%;
+    /* width: 50% !important; */
+}
+
+#tinymce p{
+    width: fit-content;
+    max-width: 100%;
+}

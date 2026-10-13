@@ -1,0 +1,24 @@
+@use '../globals/g-mixins' as *;
+@use '../globals/g-variables' as *;
+@use '../base/b-typography' as *;
+
+footer{
+    
+    .container{
+        @include custom-container;
+
+        p{
+            color: $color-white;
+        }
+
+        .info {
+            p{
+                @include heading-8($color-white, 400);
+            }
+        }
+
+        h6{
+            color: $color-white;
+        }
+    }
+}

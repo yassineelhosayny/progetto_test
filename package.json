@@ -1,0 +1,51 @@
+{
+    "$schema": "https://json.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite",
+        "dev-build": "vite build --mode development",
+        "dev-watch": "vite build --watch --mode development",
+        "tinymce-assets": "cpx \"node_modules/tinymce/models/**/*\" public/tinymce/models && cpx \"node_modules/tinymce/icons/**/*\" public/tinymce/icons && cpx \"node_modules/tinymce/skins/**/*\" public/tinymce/skins && cpx \"node_modules/tinymce/themes/**/*\" public/tinymce/themes && cpx \"node_modules/tinymce/plugins/**/*\" public/tinymce/plugins && cpx \"node_modules/tinymce/plugins/licensekeymanager/**/*\" public/tinymce/plugins/licensekeymanager"
+    },
+    "devDependencies": {
+        "@inertiajs/vue3": "^2.2.15",
+        "@tailwindcss/postcss": "^4.1.13",
+        "@tailwindcss/vite": "^4.1.17",
+        "@vitejs/plugin-vue": "^6.0.3",
+        "autoprefixer": "^10.4.21",
+        "axios": "^1.11.0",
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^2.0.1",
+        "postcss": "^8.5.6",
+        "sass": "^1.93.2",
+        "tailwindcss": "^4.1.17",
+        "typescript": "^6.0.3",
+        "vite": "^7.1.6"
+    },
+    "name": "app",
+    "version": "1.0.0",
+    "description": "<p align=\"center\"><a href=\"https://laravel.com\" target=\"_blank\"><img src=\"https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg\" width=\"400\" alt=\"Laravel Logo\"></a></p>",
+    "main": "vite.config.js",
+    "directories": {
+        "test": "tests"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@heroicons/vue": "^2.2.0",
+        "@vimeo/player": "^2.30.4",
+        "gsap": "^3.13.0",
+        "sass-mq": "^7.0.0",
+        "swiper": "^12.0.2",
+        "tinymce": "^8.7.0"
+    },
+    "allowScripts": {
+        "@parcel/watcher@2.5.1": true,
+        "@tailwindcss/oxide@4.1.13": true,
+        "@tailwindcss/oxide@4.1.17": true,
+        "esbuild@0.28.1": true
+    }
+}

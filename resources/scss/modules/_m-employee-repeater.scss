@@ -1,0 +1,32 @@
+@use "../globals/g-mixins.scss" as *;
+@use "../globals/g-functions.scss" as *;
+
+.section-employee-repeater {
+    .container {
+        @include custom-container();
+
+        .department-repeater {
+            .department {
+
+                .department-name{
+                    margin-bottom: 1.5rem;
+                }
+
+                h6, p {
+                    color: white;
+                }
+
+                .employee-position{
+                    margin-bottom: pxrem(8);
+                }
+
+                .employee-repeater{
+
+                    .employee{
+                        text-align: center;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,809 @@
+<?php
+
+namespace App\Jobs;
+
+use App\Models\ResourceGenerator;
+use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
+
+class GenerateFilamentResourceJob
+{
+    // Rimozione di implements ShouldQueue per esecuzione sincrona
+    // Manteniamo Queueable per compatibilità ma non lo usiamo
+    
+    public int $resourceId;
+    private bool $useStorageMode;
+
+    /**
+     * Create a new job instance.
+     */
+    public function __construct(ResourceGenerator $resource, bool $useStorageMode = null)
+    {
+        $this->resourceId = $resource->id;
+        $this->useStorageMode = $useStorageMode ?? $this->shouldUseStorageMode();
+    }
+
+    /**
+     * Determina se usare storage mode (per produzione) o filesystem normale (development)
+     */
+    private function shouldUseStorageMode(): bool
+    {
+        // Se in produzione o se app/ non è scrivibile, usa storage
+        return app()->environment('production') || !is_writable(app_path());
+    }
+
+    /**
+     * Ottieni il path base per i file generati
+     */
+    private function getBasePath(string $subPath = ''): string
+    {
+        if ($this->useStorageMode) {
+            return storage_path('app/generated/' . ltrim($subPath, '/'));
+        }
+        
+        return app_path($subPath);
+    }
+
+    /**
+     * Assicurati che la directory esista
+     */
+    private function ensureDirectory(string $path): void
+    {
+        $directory = dirname($path);
+        if (!is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+    }
+
+    /**
+     * Execute the job.
+     */
+    public function handle(): void
+    {
+        // Configurazioni per shared hosting
+        set_time_limit(300); // 5 minuti
+        ini_set('memory_limit', '512M');
+        
+        // Recupera il modello dall'ID
+        $resource = ResourceGenerator::findOrFail($this->resourceId);
+        
+        $mode = $this->useStorageMode ? 'STORAGE' : 'FILESYSTEM';
+        Log::info('[GenerateFilamentResourceJob] Inizio generazione risorsa sincrona', [
+            'resource' => $resource->toArray(),
+            'mode' => $mode,
+            'base_path' => $this->getBasePath()
+        ]);
+        
+        try {
+            if (!defined('STDIN')) {
+                define('STDIN', fopen('php://stdin', 'r'));
+            }
+            
+            $cwd = getcwd();
+            chdir(base_path());
+            
+            if (!$resource->has_categories) {
+                $this->generateSimpleResource($resource);
+            } else {
+                $this->generateResourceWithCategories($resource);
+            }
+            
+            chdir($cwd);
+            Log::info('[GenerateFilamentResourceJob] Generazione completata con successo');
+            
+        } catch (\Throwable $e) {
+            Log::error('[GenerateFilamentResourceJob] Errore durante la generazione: ' . $e->getMessage(), [
+                'exception' => $e,
+                'resource' => $resource->toArray(),
+            ]);
+            
+            if (isset($cwd)) {
+                chdir($cwd);
+            }
+            
+            throw $e; // Rilancia per far fallire l'Observer
+        }
+    }
+
+    /**
+     * Genera una risorsa semplice senza categorie
+     */
+    private function generateSimpleResource(ResourceGenerator $resource): void
+    {
+        // Converte il nome risorsa in CamelCase senza spazi
+        $resourceName = str_replace(' ', '', ucwords(str_replace(['_', '-'], ' ', $resource->name)));
+        
+        Log::info('[GenerateFilamentResourceJob] Generazione risorsa semplice senza cluster', ['name' => $resourceName]);
+        
+        // Crea il modello se non esiste
+        $this->createModelIfNotExists($resourceName);
+        
+        // Crea la struttura delle cartelle per la risorsa semplice (senza cluster)
+        $resourcePath = base_path("app/Filament/Resources/{$resourceName}");
+        if (!file_exists($resourcePath)) {
+            mkdir($resourcePath, 0755, true);
+        }
+        
+        // Crea il file della risorsa principale senza cluster
+        $this->createSimpleResourceFile($resource, $resourceName);
+        
+        Log::info('[GenerateFilamentResourceJob] Risorsa semplice creata con successo', ['name' => $resourceName]);
+    }
+
+    /**
+     * Genera una risorsa con categorie (cluster)
+     */
+    private function generateResourceWithCategories(ResourceGenerator $resource): void
+    {
+        // Converte il nome risorsa in CamelCase per modello e cluster
+        $resourceName = str_replace(' ', '', ucwords(str_replace(['_', '-'], ' ', $resource->name)));
+        
+        // Crea il cluster manualmente
+        $this->createClusterFile($resourceName);
+        
+        // Crea la risorsa principale
+        $this->createMainResourceFile($resource, $resourceName);
+        
+        // Crea la risorsa delle categorie
+        $categoriesModelName = $resourceName . 'Categories';
+        $this->createCategoriesResourceFile($resource, $resourceName, $categoriesModelName);
+    }
+
+    /**
+     * Crea il file del cluster manualmente
+     */
+    private function createClusterFile(string $resourceName): void
+    {
+        $clusterPath = $this->getBasePath("Filament/Clusters/{$resourceName}");
+        $this->ensureDirectory($clusterPath);
+        
+        $clusterFilePath = $clusterPath . "/{$resourceName}Cluster.php";
+        
+        $template = require app_path('Jobs/Templates/ClusterTemplate.php');
+        $clusterContent = str_replace('{{RESOURCE_NAME}}', $resourceName, $template);
+        
+        file_put_contents($clusterFilePath, $clusterContent);
+        Log::info('[GenerateFilamentResourceJob] Cluster file creato', [
+            'path' => $clusterFilePath,
+            'mode' => $this->useStorageMode ? 'storage' : 'filesystem'
+        ]);
+    }
+
+    /**
+     * Crea il file della risorsa principale manualmente
+     */
+    private function createMainResourceFile(ResourceGenerator $resource, string $resourceName): void
+    {
+        // Crea il modello se non esiste
+        $this->createModelIfNotExists($resourceName);
+        
+        $resourcePath = base_path("app/Filament/Clusters/{$resourceName}/Resources/{$resourceName}");
+        if (!file_exists($resourcePath)) {
+            mkdir($resourcePath, 0755, true);
+        }
+        
+        $resourceFilePath = $resourcePath . "/{$resourceName}Resource.php";
+        
+        $template = require app_path('Jobs/Templates/ResourceTemplate.php');
+        
+        // Gestisci i placeholder condizionali per il cluster
+        $clusterImport = $resource->has_categories ? 
+            "\nuse App\\Filament\\Clusters\\{$resourceName}\\{$resourceName}Cluster;" : '';
+        $clusterProperty = $resource->has_categories ? 
+            "\n    protected static ?string \$cluster = {$resourceName}Cluster::class;\n" : "\n";
+        
+        // Crea label con spazi prima delle maiuscole (solo per visualizzazione)
+        $labelWithSpaces = preg_replace('/(?<!^)([A-Z])/', ' $1', $resourceName);
+        
+        $resourceContent = str_replace([
+            '{{CLUSTER_NAME}}',
+            '{{RESOURCE_NAME}}',
+            '{{MODEL_NAME}}',
+            '{{CLUSTER_IMPORT}}',
+            '{{CLUSTER_PROPERTY}}',
+            '{{NAVIGATION_SORT}}',
+            '{{MODEL_LABEL}}',
+            '{{PLURAL_MODEL_LABEL}}'
+        ], [
+            $resourceName,          // Nome classe senza spazi
+            $resourceName,          // Nome risorsa senza spazi  
+            $resourceName,          // Nome modello senza spazi
+            $clusterImport,
+            $clusterProperty,
+            '0',
+            $labelWithSpaces,       // Label con spazi solo per visualizzazione
+            $labelWithSpaces        // Plural label con spazi
+        ], $template);
+        
+        file_put_contents($resourceFilePath, $resourceContent);
+        Log::info('[GenerateFilamentResourceJob] Resource principale creata', ['path' => $resourceFilePath]);
+        
+        // Crea i file schema separati
+        $this->createResourceSchemas($resourceName, $resourceName);
+        
+        // Crea le pagine della risorsa
+        $this->createResourcePages($resourceName, $resourceName);
+    }
+
+    /**
+     * Crea il file della risorsa delle categorie manualmente
+     */
+    private function createCategoriesResourceFile(ResourceGenerator $resource, string $resourceName, string $categoriesModelName): void
+    {
+        // Crea il modello delle categorie se non esiste
+        $this->createModelIfNotExists($categoriesModelName);
+        
+        $resourcePath = base_path("app/Filament/Clusters/{$resourceName}/Resources/{$categoriesModelName}");
+        if (!file_exists($resourcePath)) {
+            mkdir($resourcePath, 0755, true);
+        }
+        
+        $resourceFilePath = $resourcePath . "/{$categoriesModelName}Resource.php";
+        
+        $template = require app_path('Jobs/Templates/ResourceTemplate.php');
+        
+        // Le categorie hanno sempre il cluster dato che fanno parte del cluster principale
+        $clusterImport = "\nuse App\\Filament\\Clusters\\{$resourceName}\\{$resourceName}Cluster;";
+        $clusterProperty = "\n    protected static ?string \$cluster = {$resourceName}Cluster::class;\n";
+        
+        $resourceContent = str_replace([
+            '{{CLUSTER_NAME}}',
+            '{{RESOURCE_NAME}}',
+            '{{MODEL_NAME}}',
+            '{{CLUSTER_IMPORT}}',
+            '{{CLUSTER_PROPERTY}}',
+            '{{NAVIGATION_SORT}}',
+            '{{MODEL_LABEL}}',
+            '{{PLURAL_MODEL_LABEL}}'
+        ], [
+            $resourceName,
+            $categoriesModelName,
+            $categoriesModelName,
+            $clusterImport,
+            $clusterProperty,
+            '1',
+            'Categoria',
+            'Categorie'
+        ], $template);
+        
+        file_put_contents($resourceFilePath, $resourceContent);
+        Log::info('[GenerateFilamentResourceJob] Resource categorie creata', ['path' => $resourceFilePath]);
+        
+        // Crea i file schema separati
+        $this->createResourceSchemas($resourceName, $categoriesModelName);
+        
+        // Crea le pagine della risorsa categorie
+        $this->createResourcePages($resourceName, $categoriesModelName);
+    }
+
+    /**
+     * Crea i file schema per una risorsa (Form, Infolist, Table)
+     */
+    private function createResourceSchemas(string $clusterName, string $resourceName): void
+    {
+        // Crea cartella Schemas per Form e Infolist
+        $schemasPath = base_path("app/Filament/Clusters/{$clusterName}/Resources/{$resourceName}/Schemas");
+        if (!file_exists($schemasPath)) {
+            mkdir($schemasPath, 0755, true);
+        }
+        
+        // Crea cartella Tables per Table
+        $tablesPath = base_path("app/Filament/Clusters/{$clusterName}/Resources/{$resourceName}/Tables");
+        if (!file_exists($tablesPath)) {
+            mkdir($tablesPath, 0755, true);
+        }
+        
+        // Form Schema
+        $formTemplate = require app_path('Jobs/Templates/FormTemplate.php');
+        $formContent = str_replace([
+            '{{CLUSTER_NAME}}',
+            '{{RESOURCE_NAME}}'
+        ], [
+            $clusterName,
+            $resourceName
+        ], $formTemplate);
+        file_put_contents($schemasPath . "/{$resourceName}Form.php", $formContent);
+        
+        // Infolist Schema
+        $infolistTemplate = require app_path('Jobs/Templates/InfolistTemplate.php');
+        $infolistContent = str_replace([
+            '{{CLUSTER_NAME}}',
+            '{{RESOURCE_NAME}}'
+        ], [
+            $clusterName,
+            $resourceName
+        ], $infolistTemplate);
+        file_put_contents($schemasPath . "/{$resourceName}Infolist.php", $infolistContent);
+        
+        // Table Schema (in cartella Tables)
+        $tableTemplate = require app_path('Jobs/Templates/TableTemplate.php');
+        $tableContent = str_replace([
+            '{{CLUSTER_NAME}}',
+            '{{RESOURCE_NAME}}'
+        ], [
+            $clusterName,
+            $resourceName
+        ], $tableTemplate);
+        file_put_contents($tablesPath . "/{$resourceName}Table.php", $tableContent);
+        
+        Log::info('[GenerateFilamentResourceJob] Schema e Table files creati', ['cluster' => $clusterName, 'resource' => $resourceName]);
+    }
+
+    /**
+     * Crea un modello se non esiste
+     */
+    private function createModelIfNotExists(string $modelName): void
+    {
+        $modelPath = $this->getBasePath("Models/{$modelName}.php");
+        
+        if (!file_exists($modelPath)) {
+            // Assicurati che la directory esista
+            $this->ensureDirectory($modelPath);
+            
+            // Crea il modello manualmente invece di usare Artisan::call
+            $template = require app_path('Jobs/Templates/ModelTemplate.php');
+            $modelContent = str_replace('{{MODEL_NAME}}', $modelName, $template);
+            
+            file_put_contents($modelPath, $modelContent);
+            Log::info('[GenerateFilamentResourceJob] Modello creato manualmente', [
+                'model' => $modelName, 
+                'path' => $modelPath,
+                'mode' => $this->useStorageMode ? 'storage' : 'filesystem'
+            ]);
+            
+            // Crea la Policy
+            $this->createPolicy($modelName);
+            // Crea anche la migrazione
+            $this->createMigration($modelName);
+        }
+    }
+
+    /**
+     * Crea la migrazione per il modello
+     */
+    private function createMigration(string $modelName): void
+    {
+        $tableName = \Illuminate\Support\Str::snake(\Illuminate\Support\Str::pluralStudly($modelName));
+        $timestamp = date('Y_m_d_His');
+        $migrationName = "create_{$tableName}_table";
+        $migrationPath = base_path("database/migrations/{$timestamp}_{$migrationName}.php");
+        
+        // Controlla se la tabella esiste già
+        if (\Illuminate\Support\Facades\Schema::hasTable($tableName)) {
+            Log::info('[GenerateFilamentResourceJob] Tabella già esistente, skip migrazione', ['table' => $tableName]);
+            return;
+        }
+        
+        $template = require app_path('Jobs/Templates/MigrationTemplate.php');
+        $migrationContent = str_replace('{{TABLE_NAME}}', $tableName, $template);
+        
+        file_put_contents($migrationPath, $migrationContent);
+        Log::info('[GenerateFilamentResourceJob] Migrazione creata', ['table' => $tableName, 'path' => $migrationPath]);
+        
+        // Esegui solo le migrazioni pendenti (evita conflitti)
+        try {
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            Log::info('[GenerateFilamentResourceJob] Migrazione eseguita con successo', ['table' => $tableName]);
+        } catch (\Exception $e) {
+            Log::error('[GenerateFilamentResourceJob] Errore nell\'esecuzione della migrazione', ['error' => $e->getMessage()]);
+            // Non facciamo fallire tutto il processo se la migrazione fallisce
+        }
+    }
+
+    /**
+     * Crea le pagine per una risorsa
+     */
+    private function createResourcePages(string $clusterName, string $resourceName): void
+    {
+        $pagesPath = base_path("app/Filament/Clusters/{$clusterName}/Resources/{$resourceName}/Pages");
+        if (!file_exists($pagesPath)) {
+            mkdir($pagesPath, 0755, true);
+        }
+        
+        // Lista
+        $listTemplate = require app_path('Jobs/Templates/ListPageTemplate.php');
+        $listPageContent = str_replace([
+            '{{CLUSTER_NAME}}',
+            '{{RESOURCE_NAME}}'
+        ], [
+            $clusterName,
+            $resourceName
+        ], $listTemplate);
+        file_put_contents($pagesPath . "/List{$resourceName}.php", $listPageContent);
+        
+        // Create
+        $createTemplate = require app_path('Jobs/Templates/CreatePageTemplate.php');
+        $createPageContent = str_replace([
+            '{{CLUSTER_NAME}}',
+            '{{RESOURCE_NAME}}'
+        ], [
+            $clusterName,
+            $resourceName
+        ], $createTemplate);
+        file_put_contents($pagesPath . "/Create{$resourceName}.php", $createPageContent);
+        
+        // View
+        $viewTemplate = require app_path('Jobs/Templates/ViewPageTemplate.php');
+        $viewPageContent = str_replace([
+            '{{CLUSTER_NAME}}',
+            '{{RESOURCE_NAME}}'
+        ], [
+            $clusterName,
+            $resourceName
+        ], $viewTemplate);
+        file_put_contents($pagesPath . "/View{$resourceName}.php", $viewPageContent);
+        
+        // Edit
+        $editTemplate = require app_path('Jobs/Templates/EditPageTemplate.php');
+        $editPageContent = str_replace([
+            '{{CLUSTER_NAME}}',
+            '{{RESOURCE_NAME}}'
+        ], [
+            $clusterName,
+            $resourceName
+        ], $editTemplate);
+        file_put_contents($pagesPath . "/Edit{$resourceName}.php", $editPageContent);
+        
+        Log::info('[GenerateFilamentResourceJob] Pagine risorsa create', ['cluster' => $clusterName, 'resource' => $resourceName]);
+    }
+
+    /**
+     * Aggiunge il trait TemplateableResource alla risorsa generata.
+     */
+    private function addTemplateableTraitToResource(string $resourcePath): void
+    {
+        if (!file_exists($resourcePath)) {
+            return;
+        }
+
+        $content = file_get_contents($resourcePath);
+
+        // Aggiungi la use tra le use, se non già presente
+        if (strpos($content, 'use App\\Traits\\TemplateableResource;') === false) {
+            $content = preg_replace(
+                '/(use .+;)(?!.*use )/sU',
+                "$0\nuse App\\Traits\\TemplateableResource;",
+                $content,
+                1
+            );
+        }
+
+        // Inserisci il trait subito dopo l'apertura della classe, se non già presente
+        if (strpos($content, 'use TemplateableResource;') === false) {
+            $content = preg_replace(
+                '/(class\\s+\\w+\\s+extends\\s+\\w+\\s*\\{)/',
+                "$1\n    use TemplateableResource;",
+                $content,
+                1
+            );
+        }
+
+        file_put_contents($resourcePath, $content);
+    }
+
+    /**
+     * Crea la Policy per il modello
+     */
+    private function createPolicy(string $modelName): void
+    {
+        $policyName = $modelName . 'Policy';
+        $policyPath = $this->getBasePath("Policies/{$policyName}.php");
+        
+        if (!file_exists($policyPath)) {
+            // Assicurati che la directory esista
+            $this->ensureDirectory($policyPath);
+            
+            $template = require app_path('Jobs/Templates/PolicyTemplate.php');
+            
+            // Crea la variabile del modello (es: News -> $news)
+            $modelVariable = lcfirst($modelName);
+            
+            $policyContent = str_replace([
+                '{{POLICY_NAME}}',
+                '{{MODEL_NAME}}',
+                '{{RESOURCE_NAME}}',
+                '{{MODEL_VARIABLE}}'
+            ], [
+                $policyName,
+                $modelName,
+                $modelName,
+                $modelVariable
+            ], $template);
+            
+            file_put_contents($policyPath, $policyContent);
+            Log::info('[GenerateFilamentResourceJob] Policy creata', [
+                'model' => $modelName, 
+                'path' => $policyPath,
+                'mode' => $this->useStorageMode ? 'storage' : 'filesystem'
+            ]);
+        }
+        
+        // Genera le permission Shield per questa risorsa
+        $this->generateShieldPermissions($modelName);
+    }
+
+    /**
+     * Genera le permission Shield per la risorsa
+     */
+    private function generateShieldPermissions(string $modelName): void
+    {
+        try {
+            Log::info('[GenerateFilamentResourceJob] Generazione permission diretta nel database', ['model' => $modelName]);
+            
+            // Lista delle permission standard per ogni risorsa (formato Policy)
+            $permissions = [
+                "ViewAny:{$modelName}",
+                "View:{$modelName}",
+                "Create:{$modelName}",
+                "Update:{$modelName}",
+                "Delete:{$modelName}",
+                "Restore:{$modelName}",
+                "ForceDelete:{$modelName}",
+                "ForceDeleteAny:{$modelName}",
+                "RestoreAny:{$modelName}",
+                "Replicate:{$modelName}",
+                "Reorder:{$modelName}"
+            ];
+            
+            $createdPermissions = [];
+            
+            foreach ($permissions as $permissionName) {
+                // Crea la permission con il nome esatto (senza conversioni)
+                $permission = \Spatie\Permission\Models\Permission::firstOrCreate([
+                    'name' => $permissionName,
+                    'guard_name' => 'web'
+                ]);
+                
+                $createdPermissions[] = $permission->name;
+                Log::info('[GenerateFilamentResourceJob] Permission creata', ['name' => $permission->name]);
+            }
+            
+            Log::info('[GenerateFilamentResourceJob] Permissions create completate', [
+                'model' => $modelName,
+                'permissions' => $createdPermissions
+            ]);
+            
+            // Assegna le permission al ruolo admin se esiste
+            $this->assignPermissionsToAdmin($modelName);
+            
+        } catch (\Exception $e) {
+            Log::warning('[GenerateFilamentResourceJob] Errore nella generazione permission Shield', [
+                'model' => $modelName,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Assegna le permission generate al ruolo admin
+     */
+    private function assignPermissionsToAdmin(string $modelName): void
+    {
+        try {
+            // Trova il ruolo admin
+            $adminRole = \Spatie\Permission\Models\Role::where('name', 'admin')
+                ->orWhere('name', 'super_admin')
+                ->first();
+                
+            if (!$adminRole) {
+                Log::warning('[GenerateFilamentResourceJob] Ruolo admin non trovato per assegnazione permission');
+                return;
+            }
+            
+            // Lista delle permission da assegnare (formato Policy esatto)
+            $permissions = [
+                "ViewAny:{$modelName}",
+                "View:{$modelName}",
+                "Create:{$modelName}",
+                "Update:{$modelName}",
+                "Delete:{$modelName}",
+                "Restore:{$modelName}",
+                "ForceDelete:{$modelName}",
+                "ForceDeleteAny:{$modelName}",
+                "RestoreAny:{$modelName}",
+                "Replicate:{$modelName}",
+                "Reorder:{$modelName}"
+            ];
+            
+            $assignedPermissions = [];
+            
+            foreach ($permissions as $permissionName) {
+                // Trova la permission con il nome esatto
+                $permission = \Spatie\Permission\Models\Permission::where('name', $permissionName)->first();
+                    
+                if ($permission && !$adminRole->hasPermissionTo($permission)) {
+                    $adminRole->givePermissionTo($permission);
+                    $assignedPermissions[] = $permission->name;
+                    Log::info('[GenerateFilamentResourceJob] Permission assegnata ad admin', [
+                        'permission' => $permission->name,
+                        'role' => $adminRole->name
+                    ]);
+                }
+            }
+            
+            Log::info('[GenerateFilamentResourceJob] Assegnazione permissions completata', [
+                'model' => $modelName,
+                'role' => $adminRole->name,
+                'assigned' => $assignedPermissions
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::warning('[GenerateFilamentResourceJob] Errore nell\'assegnazione permission ad admin', [
+                'model' => $modelName,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Crea il file della risorsa semplice senza cluster
+     */
+    private function createSimpleResourceFile(ResourceGenerator $resource, string $resourceName): void
+    {
+        $resourcePath = base_path("app/Filament/Resources/{$resourceName}");
+        if (!file_exists($resourcePath)) {
+            mkdir($resourcePath, 0755, true);
+        }
+        
+        $resourceFilePath = $resourcePath . "/{$resourceName}Resource.php";
+        
+        // Usa il template specifico per risorse semplici
+        $template = require app_path('Jobs/Templates/SimpleResourceTemplate.php');
+        
+        // Crea label con spazi prima delle maiuscole
+        $labelWithSpaces = preg_replace('/(?<!^)([A-Z])/', ' $1', $resourceName);
+        
+        $resourceContent = str_replace([
+            '{{RESOURCE_NAME}}',
+            '{{MODEL_NAME}}',
+            '{{MODEL_LABEL}}',
+            '{{PLURAL_MODEL_LABEL}}'
+        ], [
+            $resourceName,
+            $resourceName,
+            $labelWithSpaces,
+            $labelWithSpaces
+        ], $template);
+        
+        file_put_contents($resourceFilePath, $resourceContent);
+        Log::info('[GenerateFilamentResourceJob] Resource semplice creata', ['path' => $resourceFilePath]);
+        
+        // Crea i file schema separati (senza cluster nei namespace)
+        $this->createSimpleResourceSchemas($resourceName);
+        
+        // Crea le pagine della risorsa (senza cluster nei namespace)
+        $this->createSimpleResourcePages($resourceName);
+    }
+
+    /**
+     * Crea i file schema per risorsa semplice (senza cluster)
+     */
+    private function createSimpleResourceSchemas(string $resourceName): void
+    {
+        // Crea la cartella Schemas
+        $schemasPath = base_path("app/Filament/Resources/{$resourceName}/Schemas");
+        if (!file_exists($schemasPath)) {
+            mkdir($schemasPath, 0755, true);
+        }
+
+        // Form
+        $formTemplate = require app_path('Jobs/Templates/FormTemplate.php');
+        $formContent = str_replace([
+            '{{CLUSTER_NAME}}',
+            '{{RESOURCE_NAME}}',
+            '{{MODEL_NAME}}'
+        ], [
+            $resourceName, // Senza cluster, usiamo solo il nome risorsa
+            $resourceName,
+            $resourceName
+        ], $formTemplate);
+        
+        // Aggiusta il namespace per risorsa semplice
+        $formContent = str_replace(
+            "namespace App\\Filament\\Clusters\\{$resourceName}\\Resources\\{$resourceName}\\Schemas;",
+            "namespace App\\Filament\\Resources\\{$resourceName}\\Schemas;",
+            $formContent
+        );
+        
+        file_put_contents($schemasPath . "/{$resourceName}Form.php", $formContent);
+
+        // Infolist
+        $infolistTemplate = require app_path('Jobs/Templates/InfolistTemplate.php');
+        $infolistContent = str_replace([
+            '{{CLUSTER_NAME}}',
+            '{{RESOURCE_NAME}}',
+            '{{MODEL_NAME}}'
+        ], [
+            $resourceName,
+            $resourceName,
+            $resourceName
+        ], $infolistTemplate);
+        
+        $infolistContent = str_replace(
+            "namespace App\\Filament\\Clusters\\{$resourceName}\\Resources\\{$resourceName}\\Schemas;",
+            "namespace App\\Filament\\Resources\\{$resourceName}\\Schemas;",
+            $infolistContent
+        );
+        
+        file_put_contents($schemasPath . "/{$resourceName}Infolist.php", $infolistContent);
+
+        // Table
+        $tablePath = base_path("app/Filament/Resources/{$resourceName}/Tables");
+        if (!file_exists($tablePath)) {
+            mkdir($tablePath, 0755, true);
+        }
+
+        $tableTemplate = require app_path('Jobs/Templates/TableTemplate.php');
+        $tableContent = str_replace([
+            '{{CLUSTER_NAME}}',
+            '{{RESOURCE_NAME}}',
+            '{{MODEL_NAME}}'
+        ], [
+            $resourceName,
+            $resourceName,
+            $resourceName
+        ], $tableTemplate);
+        
+        $tableContent = str_replace(
+            "namespace App\\Filament\\Clusters\\{$resourceName}\\Resources\\{$resourceName}\\Tables;",
+            "namespace App\\Filament\\Resources\\{$resourceName}\\Tables;",
+            $tableContent
+        );
+        
+        file_put_contents($tablePath . "/{$resourceName}Table.php", $tableContent);
+    }
+
+    /**
+     * Crea le pagine per risorsa semplice (senza cluster)
+     */
+    private function createSimpleResourcePages(string $resourceName): void
+    {
+        $pagesPath = base_path("app/Filament/Resources/{$resourceName}/Pages");
+        if (!file_exists($pagesPath)) {
+            mkdir($pagesPath, 0755, true);
+        }
+
+        $pageTemplates = [
+            'CreatePageTemplate.php' => "Create{$resourceName}.php",
+            'EditPageTemplate.php' => "Edit{$resourceName}.php", 
+            'ListPageTemplate.php' => "List{$resourceName}.php",
+            'ViewPageTemplate.php' => "View{$resourceName}.php"
+        ];
+
+        foreach ($pageTemplates as $templateFile => $outputFile) {
+            $template = require app_path("Jobs/Templates/{$templateFile}");
+            $content = str_replace([
+                '{{CLUSTER_NAME}}',
+                '{{RESOURCE_NAME}}',
+                '{{MODEL_NAME}}'
+            ], [
+                $resourceName,
+                $resourceName,
+                $resourceName
+            ], $template);
+            
+            // Aggiusta i namespace per risorsa semplice
+            $content = str_replace(
+                "namespace App\\Filament\\Clusters\\{$resourceName}\\Resources\\{$resourceName}\\Pages;",
+                "namespace App\\Filament\\Resources\\{$resourceName}\\Pages;",
+                $content
+            );
+            
+            $content = str_replace(
+                "use App\\Filament\\Clusters\\{$resourceName}\\Resources\\{$resourceName}\\{$resourceName}Resource;",
+                "use App\\Filament\\Resources\\{$resourceName}\\{$resourceName}Resource;",
+                $content
+            );
+            
+            // Correggi anche eventuali riferimenti nel body del file
+            $content = str_replace(
+                "App\\Filament\\Clusters\\{$resourceName}\\Resources\\{$resourceName}Resource",
+                "App\\Filament\\Resources\\{$resourceName}\\{$resourceName}Resource",
+                $content
+            );
+            
+            file_put_contents($pagesPath . "/{$outputFile}", $content);
+        }
+    }
+}

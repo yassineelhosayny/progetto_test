@@ -1,0 +1,10 @@
+@use '../globals/g-functions' as * ;
+@use 'sass-mq' as * ;
+.contact-form{
+    @include make-mobile-container;
+
+    @include mq(lg){
+        @include make-col(16);
+        margin: 0 auto;
+    }
+}

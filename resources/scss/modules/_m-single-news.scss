@@ -1,0 +1,26 @@
+@use '../globals/g-functions' as *;
+@use '../globals/g-variables' as *;
+@use '../globals/g-mixins' as *;
+
+.single-news {
+
+    .container {
+        @include custom-container();
+        padding-top: pxrem(150) !important;
+
+        .description{
+
+            strong{
+                color: $color-blue-light;
+            }
+
+            iframe{
+                height: auto;
+                min-height: 50vh;
+                margin-bottom: 30px;
+                margin-top: 30px;
+                width: 100%;
+            }
+        }
+    }
+}

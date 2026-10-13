@@ -1,0 +1,76 @@
+@use "../globals/g-variables" as *;
+@use "../globals/g-functions" as *;
+@use "sass-mq" as *;
+
+
+.accordion {
+    .accordion-item{
+
+        .accordion-title{
+            align-items: center;
+            border-bottom: 1px solid $color-white;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            padding: pxrem(15) 0;
+
+            @include mq(lg){
+                padding-top: 0;
+            }
+
+            svg{
+                height: 20px;
+                transition: transform 0.3s ease-in-out;
+                width: 20px;
+            }  
+        }
+    
+        .accordion-hidden-section {
+            height: 0px;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, height 0.3s ease-in-out;
+            z-index: -1;
+    
+            .accordion-list {
+                list-style: none;
+                ul{
+                    list-style: none;
+                    padding-inline-start: 0;
+    
+                    li {
+                        list-style-type: none;
+        
+                        &:last-child {
+                            padding-bottom: pxrem(15);
+                        }
+                    }
+                }
+            }
+
+            .accordion-text {
+                p{
+                    &:last-child {
+                        padding-bottom: pxrem(15);
+                    }
+                }
+            }
+        }
+    
+        &.open {
+    
+            .accordion-title{ 
+                
+                svg{
+                    transform: rotate(180deg);
+                }
+            }
+
+            .accordion-hidden-section {
+                height: auto;
+                opacity: 1;
+                z-index: 1;
+            }
+        }
+    }
+}

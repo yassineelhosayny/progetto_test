@@ -1,0 +1,11 @@
+@use '../globals/g-mixins' as *;
+@use '../globals/g-variables' as *;
+@use '../globals/g-functions' as *;
+
+.section-discover-more {
+
+    .container{
+        @include custom-container();
+        padding-top: pxrem(150) !important;
+    }
+}

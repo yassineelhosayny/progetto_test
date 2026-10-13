@@ -1,0 +1,81 @@
+@use "_g-variables" as *;
+@use "sass-mq" as * with (
+    $breakpoints: (
+        sm:  $sm,
+        md:  $md,
+        lg:  $lg,
+        xl:  $xl,
+        xxl: $xxl,
+        xxxl: $xxxl,
+    )
+);
+
+// Px to rem conversion
+// 16 is the base font size set in the body
+@function pxrem($pixels) {
+  @return #{calc($pixels/16)}rem;
+}
+
+// Px to em conversion
+// 16 is the base font size set in the body
+@function pxem($pixels) {
+	@return #{calc($pixels/16)}em;
+}
+// Hex value to comma-delimited rgb values conversion
+// In: #000 - Out: 0,0,0
+@function derive-rgb-values-from-hex($hex) {
+	@return red($hex), green($hex), blue($hex);
+}
+
+// Convert cols system to vw - to be included for 24 cols 
+@function col-width($size, $columns: $grid-columns) {
+	@return (calc($size / $columns) * 100vw);
+}
+
+// Convert cols system to vw - to be included for 24 cols 
+// IMPORTANT: to be included for 24 cols grid (full-width)
+@mixin make-col($size, $padding-x: 0.5, $columns: $grid-columns) {
+	flex: 0 0 ((calc($size / $columns)) * 100vw);
+	// Add a `max-width` to ensure content within each column does not blow out
+	// the width of the column. Applies to IE10+ and Firefox. Chrome and Safari
+	// do not appear to require this.
+	max-width: (calc($size / $columns) * 100vw);
+	// padding-right: col-width($padding-x);
+	// padding-left: col-width($padding-x);
+}
+
+@mixin make-col-offset($size, $columns: $grid-columns) {
+	$num: calc($size / $columns);
+	margin-left: if($num==0, 0, $num * 100vw);
+} 
+
+// Convert cols system to vw - to be included for 24 cols 
+@mixin make-col-ready() {
+	flex-shrink: 0;
+	max-width: 100vw;
+	padding-right: calc(#{$mobile-gutter});
+	padding-left: calc(#{$mobile-gutter});
+	width: 100vw;
+}
+
+// Convert cols system to vw - to be included for 24 cols 
+// IMPORTANT: to be included for classical 12 cols grid (boxed-width)
+@mixin make-row-container() {
+	@include make-row;
+
+    > * {
+        @include make-col-ready;
+    }
+}
+
+// Responsive container
+@mixin make-mobile-container($mq: lg) {
+	padding-left: $mobile-gutter;
+	padding-right: $mobile-gutter;
+	max-width: 100%;
+	
+	@include mq($mq) {
+		padding-left: 0;
+		padding-right: 0;	
+	}
+}

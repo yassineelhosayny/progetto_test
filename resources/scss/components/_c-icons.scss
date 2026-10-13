@@ -1,0 +1,15 @@
+@use "../globals/g-functions" as *;
+
+.icon {
+
+    &.icon--plus{
+        height: pxrem(46);
+        transform: scale(0.9);
+        width: pxrem(46);
+    }
+
+    &.icon--social{
+        height: pxrem(30);
+        width: pxrem(30);
+    }
+}

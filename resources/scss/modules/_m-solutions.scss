@@ -1,0 +1,12 @@
+@use '../globals/g-mixins' as *;
+
+.solutions-section {
+    background-color: var(--bg-color);
+    .container {
+        @include custom-container;
+
+        h4, h6, p{
+            color: var(--secondary-color);
+        }
+    }
+}
