@@ -25,11 +25,15 @@ class Client extends Model
     protected static function booted(): void
     {
         static::saving(function (Client $client): void {
-            if (! empty($client->slug) || empty($client->client_name)) {
+            if (empty($client->client_name)) {
                 return;
             }
 
-            $client->slug = static::makeUniqueSlug($client->client_name, $client->getKey());
+            // Se lo slug è stato scritto manualmente, lo normalizza (es. "Agras Demo"
+            // diventa "agras-demo"). Se è vuoto, lo genera dal nome del cliente.
+            $slugSource = ! empty($client->slug) ? $client->slug : $client->client_name;
+
+            $client->slug = static::makeUniqueSlug($slugSource, $client->getKey());
         });
     }
 

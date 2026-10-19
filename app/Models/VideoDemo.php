@@ -42,8 +42,9 @@ class VideoDemo extends Model
                 $videoDemo->password = null;
             }
 
-            if (empty($videoDemo->slug) && ! empty($videoDemo->title)) {
-                $videoDemo->slug = static::makeUniqueSlug($videoDemo->title, $videoDemo->getKey());
+            if ( ! empty($videoDemo->title)) {
+                $slugSource = ! empty($videoDemo->slug) ? $videoDemo->slug : $videoDemo->title;
+                $videoDemo->slug = static::makeUniqueSlug($slugSource, $videoDemo->getKey());
             }
         });
     }

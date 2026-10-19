@@ -48,6 +48,7 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarWidth('16rem')
             ->sidebarCollapsibleOnDesktop()
             ->navigationGroups([
+                'Video Demo',
                 'Contenuti',
                 'Amministrazione',
                 'Filament Shield',

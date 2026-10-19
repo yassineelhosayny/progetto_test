@@ -83,6 +83,21 @@ class RolePermissionSeeder extends Seeder
             'Reorder:Project',
         ];
 
+        // Permessi per i clienti delle video demo
+        $clientPermissions = [
+            'ViewAny:Client',
+            'View:Client',
+            'Create:Client',
+            'Update:Client',
+            'Delete:Client',
+            'Restore:Client',
+            'ForceDelete:Client',
+            'ForceDeleteAny:Client',
+            'RestoreAny:Client',
+            'Replicate:Client',
+            'Reorder:Client',
+        ];
+
         // Permessi per i menu con formato Policy
         $menuPermissions = [
             'ViewAny:Menu',
@@ -134,6 +149,7 @@ class RolePermissionSeeder extends Seeder
             $newsPermissions, 
             $newsCategoryPermissions,
             $projectPermissions,
+            $clientPermissions,
             $menuPermissions, 
             $userPermissions,
             $rolePermissions
@@ -151,6 +167,7 @@ class RolePermissionSeeder extends Seeder
             ...$newsPermissions,
             ...$newsCategoryPermissions,
             ...$projectPermissions,
+            ...$clientPermissions,
             ...$menuPermissions,
             'ViewAny:User',
             'View:User',
