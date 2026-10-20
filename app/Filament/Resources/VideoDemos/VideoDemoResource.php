@@ -5,6 +5,7 @@ namespace App\Filament\Resources\VideoDemos;
 use App\Filament\Resources\VideoDemos\Pages\CreateVideoDemo;
 use App\Filament\Resources\VideoDemos\Pages\EditVideoDemo;
 use App\Filament\Resources\VideoDemos\Pages\ListVideoDemos;
+use App\Filament\Resources\VideoDemos\Pages\ManageVideoDemoVideos;
 use App\Filament\Resources\VideoDemos\Schemas\VideoDemoForm;
 use App\Filament\Resources\VideoDemos\Tables\VideoDemosTable;
 use App\Models\VideoDemo;
@@ -31,11 +32,12 @@ class VideoDemoResource extends Resource
     // Filament usa il titolo della demo per identificare il record nell'interfaccia.
     protected static ?string $recordTitleAttribute = 'title';
 
-    protected static ?string $navigationLabel = 'Video demo';
+    // Nel legacy la voce "Video" apre la lista dei contenitori.
+    protected static ?string $navigationLabel = 'Video';
 
-    protected static ?string $modelLabel = 'Video demo';
+    protected static ?string $modelLabel = 'Contenitore video';
 
-    protected static ?string $pluralModelLabel = 'Video demo';
+    protected static ?string $pluralModelLabel = 'Contenitori video';
 
     public static function form(Schema $schema): Schema
     {
@@ -59,6 +61,8 @@ class VideoDemoResource extends Resource
             'index' => ListVideoDemos::route('/'),
             'create' => CreateVideoDemo::route('/create'),
             'edit' => EditVideoDemo::route('/{record}/edit'),
+            // Pagina interna equivalente a "Gestisci Video" del progetto originale.
+            'videos' => ManageVideoDemoVideos::route('/{record}/videos'),
         ];
     }
 

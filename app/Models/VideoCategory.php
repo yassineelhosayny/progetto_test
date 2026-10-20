@@ -24,6 +24,19 @@ class VideoCategory extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        // Inserisce automaticamente una nuova categoria in fondo alla propria demo.
+        static::creating(function (VideoCategory $category): void {
+            if ($category->sort_order === null) {
+                $category->sort_order = ((int) static::query()
+                    ->where('video_demo_id', $category->video_demo_id)
+                    ->max('sort_order')) + 1;
+            }
+        });
+
+    }
+
     public function videoDemo(): BelongsTo
     {
         return $this->belongsTo(VideoDemo::class);

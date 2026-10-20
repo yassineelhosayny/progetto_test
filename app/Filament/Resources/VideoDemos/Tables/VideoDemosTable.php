@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\VideoDemos\Tables;
 
+use App\Filament\Resources\VideoDemos\VideoDemoResource;
 use App\Models\VideoDemo;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
@@ -16,37 +18,30 @@ class VideoDemosTable
     {
         return $table
             ->columns([
-                TextColumn::make('title')
-                    ->label('Titolo')
-                    ->searchable()
-                    ->sortable(),
-
                 TextColumn::make('client.client_name')
                     ->label('Cliente')
                     ->placeholder('Nessun cliente')
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('slug')
-                    ->label('Slug')
+                TextColumn::make('title')
+                    ->label('Nome')
                     ->searchable()
-                    ->copyable()
-                    ->toggleable(),
-
-                TextColumn::make('categories_count')
-                    ->label('Categorie')
-                    ->counts('categories')
                     ->sortable(),
 
                 IconColumn::make('is_active')
-                    ->label('Attiva')
+                    ->label('Visibile')
                     ->boolean()
                     ->sortable(),
 
-                IconColumn::make('requires_password')
-                    ->label('Protetta')
-                    ->boolean()
-                    ->sortable(),
+                // Il testo e l'URL sono calcolati dal Model usando gli slug
+                // del cliente e del contenitore, come nel progetto originale.
+                TextColumn::make('public_url')
+                    ->label('Link cliente')
+                    ->url(fn (VideoDemo $record): string => $record->public_url, true)
+                    ->openUrlInNewTab()
+                    ->copyable()
+                    ->wrap(),
 
                 TextColumn::make('created_at')
                     ->label('Creata il')
@@ -77,6 +72,14 @@ class VideoDemosTable
             ])
             ->recordActions([
                 EditAction::make(),
+
+                Action::make('manageVideos')
+                    ->label('Gestisci video')
+                    ->icon('heroicon-o-play-circle')
+                    ->url(
+                        fn (VideoDemo $record): string =>
+                            VideoDemoResource::getUrl('videos', ['record' => $record])
+                    ),
 
                 // Evita di cancellare per errore l'intera gerarchia collegata alla demo.
                 DeleteAction::make()

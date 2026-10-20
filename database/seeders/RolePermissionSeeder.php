@@ -111,6 +111,15 @@ class RolePermissionSeeder extends Seeder
             'Delete:VideoDemo',
         ];
 
+        // Permessi per i video gestiti all'interno di ogni contenitore.
+        $videoPermissions = [
+            'ViewAny:Video',
+            'View:Video',
+            'Create:Video',
+            'Update:Video',
+            'Delete:Video',
+        ];
+
         // Permessi per i menu con formato Policy
         $menuPermissions = [
             'ViewAny:Menu',
@@ -158,6 +167,7 @@ class RolePermissionSeeder extends Seeder
             $projectPermissions,
             $clientPermissions,
             $videoDemoPermissions,
+            $videoPermissions,
             $menuPermissions, 
             $userPermissions,
             $rolePermissions
@@ -179,6 +189,7 @@ class RolePermissionSeeder extends Seeder
             ...$projectPermissions,
             ...$clientPermissions,
             ...$videoDemoPermissions,
+            ...$videoPermissions,
             ...$menuPermissions,
             'ViewAny:User',
             'View:User',

@@ -10,6 +10,11 @@ class ListVideoDemos extends ListRecords
 {
     protected static string $resource = VideoDemoResource::class;
 
+    public function getTitle(): string
+    {
+        return 'Lista contenitori';
+    }
+
     protected function getHeaderActions(): array
     {
         return [
