@@ -102,6 +102,15 @@ class RolePermissionSeeder extends Seeder
             'Delete:Client',
         ];
 
+        // Permessi per la gestione delle video demo nel pannello Filament.
+        $videoDemoPermissions = [
+            'ViewAny:VideoDemo',
+            'View:VideoDemo',
+            'Create:VideoDemo',
+            'Update:VideoDemo',
+            'Delete:VideoDemo',
+        ];
+
         // Permessi per i menu con formato Policy
         $menuPermissions = [
             'ViewAny:Menu',
@@ -148,6 +157,7 @@ class RolePermissionSeeder extends Seeder
             $newsCategoryPermissions,
             $projectPermissions,
             $clientPermissions,
+            $videoDemoPermissions,
             $menuPermissions, 
             $userPermissions,
             $rolePermissions
@@ -168,6 +178,7 @@ class RolePermissionSeeder extends Seeder
             ...$newsCategoryPermissions,
             ...$projectPermissions,
             ...$clientPermissions,
+            ...$videoDemoPermissions,
             ...$menuPermissions,
             'ViewAny:User',
             'View:User',

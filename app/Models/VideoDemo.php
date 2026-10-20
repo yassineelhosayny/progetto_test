@@ -37,6 +37,14 @@ class VideoDemo extends Model
 
     protected static function booted(): void
     {
+        // Le nuove demo vengono inserite automaticamente dopo quelle esistenti.
+        // Un valore esplicito, per esempio proveniente da un seeder, viene rispettato.
+        static::creating(function (VideoDemo $videoDemo): void {
+            if ($videoDemo->sort_order === null) {
+                $videoDemo->sort_order = ((int) static::query()->max('sort_order')) + 1;
+            }
+        });
+
         static::saving(function (VideoDemo $videoDemo): void {
             if (! $videoDemo->requires_password) {
                 $videoDemo->password = null;
