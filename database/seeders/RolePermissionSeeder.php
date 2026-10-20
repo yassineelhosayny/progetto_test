@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
@@ -18,10 +17,21 @@ class RolePermissionSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Crea i ruoli base
+        // Conserva soltanto i due ruoli amministrativi previsti dalla videodemo.
+        Role::query()
+            ->whereNotIn('name', ['super_admin', 'admin'])
+            ->get()
+            ->each(fn (Role $role) => $role->delete());
+
+        // La nuova gestione è basata sui ruoli: elimina i vecchi permessi
+        // assegnati direttamente ai singoli utenti dal precedente form.
+        User::query()->each(
+            fn (User $user) => $user->syncPermissions([])
+        );
+
+        // Crea i due ruoli amministrativi definitivi.
         $superAdmin = Role::firstOrCreate(['name' => 'super_admin']);
         $admin = Role::firstOrCreate(['name' => 'admin']);
-        $editor = Role::firstOrCreate(['name' => 'editor']);
 
         // Permessi per le pagine con formato Policy
         $pagePermissions = [
@@ -90,12 +100,6 @@ class RolePermissionSeeder extends Seeder
             'Create:Client',
             'Update:Client',
             'Delete:Client',
-            'Restore:Client',
-            'ForceDelete:Client',
-            'ForceDeleteAny:Client',
-            'RestoreAny:Client',
-            'Replicate:Client',
-            'Reorder:Client',
         ];
 
         // Permessi per i menu con formato Policy
@@ -120,12 +124,6 @@ class RolePermissionSeeder extends Seeder
             'Create:User',
             'Update:User',
             'Delete:User',
-            'Restore:User',
-            'ForceDelete:User',
-            'ForceDeleteAny:User',
-            'RestoreAny:User',
-            'Replicate:User',
-            'Reorder:User',
         ];
 
         // Permessi per i ruoli
@@ -160,9 +158,11 @@ class RolePermissionSeeder extends Seeder
         }
 
         // Assegna permessi ai ruoli
-        $superAdmin->givePermissionTo($allPermissions); // Super admin ha tutti i permessi
+        // syncPermissions rende il risultato ripetibile e rimuove eventuali
+        // permessi vecchi non più previsti per questi ruoli.
+        $superAdmin->syncPermissions($allPermissions);
         
-        $admin->givePermissionTo([
+        $admin->syncPermissions([
             ...$pagePermissions,
             ...$newsPermissions,
             ...$newsCategoryPermissions,
@@ -174,33 +174,7 @@ class RolePermissionSeeder extends Seeder
             'Update:User',
         ]);
         
-        $editor->givePermissionTo([
-            ...$pagePermissions,
-            ...$newsPermissions,
-            ...$newsCategoryPermissions,
-            ...$projectPermissions,
-            'ViewAny:Menu',
-            'View:Menu',
-        ]);
-
-        // Crea utente super admin se non esiste
-        $superAdminUser = User::firstOrCreate([
-            'email' => 'admincp@adverteaser.com'
-        ], [
-            'name' => 'Super Admin',
-            'password' => bcrypt('adverteaser'),
-        ]);
-
-        $superAdminUser->assignRole('super_admin');
-
-        // Crea utente admin se non esiste
-        $adminUser = User::firstOrCreate([
-            'email' => 'admin@natura.com'
-        ], [
-            'name' => 'Admin Natura',
-            'password' => bcrypt('password'),
-        ]);
-
-        $adminUser->assignRole('admin');
+        // Elimina dalla cache qualsiasi riferimento ai ruoli e permessi rimossi.
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
     }
 }

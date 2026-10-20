@@ -16,8 +16,6 @@ use Filament\Tables\Table;
 use UnitEnum;
 
 class UserResource extends Resource
-
-    
 {
     protected static string | UnitEnum | null $navigationGroup = 'Amministrazione';
 
@@ -27,7 +25,7 @@ class UserResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserCircle;
 
-    protected static ?string $recordTitleAttribute = 'User';
+    protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?string $navigationLabel = 'Utenti';
 
@@ -56,37 +54,20 @@ class UserResource extends Resource
     {
         $query = parent::getEloquentQuery();
         $authUser = auth()->user();
-        $query
-        ->where('id', '!=', $authUser->id)
-        ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'super_admin'));
+
+        // Nessun amministratore può modificare sé stesso da questa tabella.
+        $query->whereKeyNot($authUser->getKey());
+
+        // Un admin non può vedere o modificare i super admin.
+        // Un super admin può invece gestire anche gli altri super admin.
+        if (! $authUser->hasRole('super_admin')) {
+            $query->whereDoesntHave(
+                'roles',
+                fn ($roleQuery) => $roleQuery->where('name', 'super_admin')
+            );
+        }
+
         return $query;
-    }
-
-    public static function canAccessNavigation(): bool
-    {
-        $user = auth()->user();
-        if (! $user) return false;
-
-        // Ruolo admin
-        if ($user->hasRole('admin') || $user->hasRole('super_admin')) {
-            return true;
-        }
-
-        // Permesso globale (snake_case o StudlyCase:Resource)
-        $perms = [
-            'view_any_user',
-            'view user',
-            'ViewAny:User',
-            'View:User',
-        ];
-        foreach ($perms as $perm) {
-            if ($user->can($perm)) {
-                return true;
-            }
-        }
-
-        // (Se vuoi permessi granulari su utenti, aggiungi qui la logica)
-        return false;
     }
 
     public static function getPages(): array
