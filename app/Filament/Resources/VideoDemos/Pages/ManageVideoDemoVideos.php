@@ -95,14 +95,14 @@ class ManageVideoDemoVideos extends Page implements HasTable
                     ->badge()
                     ->placeholder('Nessuna fonte'),
 
-                TextColumn::make('source_reference')
-                    ->label('ID / Link video')
-                    ->state(
-                        fn (Video $record): ?string =>
-                            $record->currentSource?->external_id
-                            ?? $record->currentSource?->source_url
+                TextColumn::make('currentSource.playback_url')
+                    ->label('Link video')
+                    ->url(
+                        fn (Video $record): ?string => $record->currentSource?->playback_url,
+                        shouldOpenInNewTab: true,
                     )
                     ->copyable()
+                    ->limit(45)
                     ->placeholder('—'),
 
                 IconColumn::make('is_active')

@@ -28,7 +28,10 @@ class Video extends Model
 
     public function videoSubcategory(): BelongsTo
     {
-        return $this->belongsTo(VideoSubcategory::class);
+        // La colonna si chiama video_subcategory_id (non video_sub_category_id).
+        // La indichiamo esplicitamente per evitare che Laravel la deduca
+        // diversamente in base a come viene scritto il nome della relazione.
+        return $this->belongsTo(VideoSubcategory::class, 'video_subcategory_id');
     }
 
     public function sources(): HasMany

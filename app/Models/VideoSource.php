@@ -42,6 +42,41 @@ class VideoSource extends Model
         return $this->belongsTo(Video::class);
     }
 
+    /**
+     * Link riproducibile calcolato dai dati della sorgente.
+     *
+     * Non viene salvato in una nuova colonna: Vimeo e YouTube usano
+     * l'external_id, mentre Bunny conserva già il proprio URL completo.
+     */
+    public function getPlaybackUrlAttribute(): ?string
+    {
+        if ($this->provider === 'bunny') {
+            return filled($this->source_url) ? $this->source_url : null;
+        }
+
+        if (blank($this->external_id)) {
+            return null;
+        }
+
+        return match ($this->provider) {
+            'vimeo' => $this->makeVimeoPlaybackUrl(),
+            'youtube' => 'https://www.youtube.com/watch?v=' . rawurlencode($this->external_id),
+            default => null,
+        };
+    }
+
+    private function makeVimeoPlaybackUrl(): string
+    {
+        $url = 'https://player.vimeo.com/video/' . rawurlencode($this->external_id);
+        $unlistedCode = $this->metadata['unlisted_code'] ?? null;
+
+        if (filled($unlistedCode)) {
+            $url .= '?h=' . rawurlencode($unlistedCode);
+        }
+
+        return $url;
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
