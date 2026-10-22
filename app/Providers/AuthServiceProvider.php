@@ -5,12 +5,14 @@ namespace App\Providers;
 use App\Models\Client;
 use App\Models\VideoDemo;
 use App\Models\Video;
+use App\Models\VideoSource;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use App\Models\News;
 use App\Policies\ClientPolicy;
 use App\Policies\NewsPolicy;
 use App\Policies\VideoDemoPolicy;
 use App\Policies\VideoPolicy;
+use App\Policies\VideoSourcePolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -23,6 +25,8 @@ class AuthServiceProvider extends ServiceProvider
         Client::class => ClientPolicy::class,
         VideoDemo::class => VideoDemoPolicy::class,
         Video::class => VideoPolicy::class,
+        // Le azioni sulle versioni vengono autorizzate da VideoSourcePolicy.
+        VideoSource::class => VideoSourcePolicy::class,
         News::class => NewsPolicy::class,
         \App\Models\Menu::class => \App\Policies\MenuPolicy::class,
         \App\Models\Settings::class => \App\Policies\SettingsPolicy::class,

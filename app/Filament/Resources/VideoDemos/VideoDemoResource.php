@@ -5,7 +5,6 @@ namespace App\Filament\Resources\VideoDemos;
 use App\Filament\Resources\VideoDemos\Pages\CreateVideoDemo;
 use App\Filament\Resources\VideoDemos\Pages\EditVideoDemo;
 use App\Filament\Resources\VideoDemos\Pages\ListVideoDemos;
-use App\Filament\Resources\VideoDemos\Pages\ManageVideoDemoVideos;
 use App\Filament\Resources\VideoDemos\Schemas\VideoDemoForm;
 use App\Filament\Resources\VideoDemos\Tables\VideoDemosTable;
 use App\Models\VideoDemo;
@@ -61,8 +60,6 @@ class VideoDemoResource extends Resource
             'index' => ListVideoDemos::route('/'),
             'create' => CreateVideoDemo::route('/create'),
             'edit' => EditVideoDemo::route('/{record}/edit'),
-            // Pagina interna equivalente a "Gestisci Video" del progetto originale.
-            'videos' => ManageVideoDemoVideos::route('/{record}/videos'),
         ];
     }
 

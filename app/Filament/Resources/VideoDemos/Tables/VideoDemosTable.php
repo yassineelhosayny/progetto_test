@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\VideoDemos\Tables;
 
-use App\Filament\Resources\VideoDemos\VideoDemoResource;
+use App\Filament\Resources\Videos\VideoResource;
 use App\Models\VideoDemo;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -78,7 +78,7 @@ class VideoDemosTable
                     ->icon('heroicon-o-play-circle')
                     ->url(
                         fn (VideoDemo $record): string =>
-                            VideoDemoResource::getUrl('videos', ['record' => $record])
+                            VideoResource::getUrl('index', ['videoDemo' => $record])
                     ),
 
                 // Evita di cancellare per errore l'intera gerarchia collegata alla demo.

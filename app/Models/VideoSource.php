@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 class VideoSource extends Model
 {
@@ -37,6 +38,7 @@ class VideoSource extends Model
         ];
     }
 
+    // Ogni versione/sorgente appartiene a un solo video.
     public function video(): BelongsTo
     {
         return $this->belongsTo(Video::class);
@@ -75,6 +77,28 @@ class VideoSource extends Model
         }
 
         return $url;
+    }
+
+    /**
+     * Imposta questa versione come corrente e disattiva tutte le altre
+     * versioni dello stesso video in un'unica transazione.
+     */
+    public function markAsCurrent(): void
+    {
+        DB::transaction(function (): void {
+            // Il lock evita che due richieste concorrenti rendano correnti
+            // due versioni differenti dello stesso video.
+            static::query()
+                ->where('video_id', $this->video_id)
+                ->lockForUpdate()
+                ->get();
+
+            static::query()
+                ->where('video_id', $this->video_id)
+                ->update(['is_current' => false]);
+
+            $this->forceFill(['is_current' => true])->save();
+        });
     }
 
     public function scopeActive(Builder $query): Builder
