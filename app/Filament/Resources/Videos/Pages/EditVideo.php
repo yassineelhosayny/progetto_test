@@ -36,9 +36,18 @@ class EditVideo extends EditRecord
     // riempire il form le ricaviamo dalle relazioni del record.
     protected function mutateFormDataBeforeFill(array $data): array
     {
+        $categoryName = $this->record->videoSubcategory->videoCategory->name;
+        $subcategoryName = $this->record->videoSubcategory->name;
+
         $data['video_demo_id'] = $this->videoDemoId;
-        $data['category_name'] = $this->record->videoSubcategory->videoCategory->name;
-        $data['subcategory_name'] = $this->record->videoSubcategory->name;
+        $data['category_name'] = $categoryName;
+
+        // Se categoria e sottocategoria sono uguali, significa che durante il
+        // salvataggio è stato applicato il valore di fallback. Nel form la
+        // sottocategoria resta vuota, come l'aveva lasciata l'admin.
+        $data['subcategory_name'] = $subcategoryName === $categoryName
+            ? null
+            : $subcategoryName;
 
         return $data;
     }

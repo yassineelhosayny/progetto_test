@@ -30,7 +30,10 @@ class VideoForm
                             ->datalist(fn (Get $get): array => self::categoryOptions($get('video_demo_id')))
                             ->helperText('Scrivi il nome della categoria oppure scegli un valore esistente.')
                             ->required()
-                            ->live()
+                            // Aggiorna i suggerimenti della sottocategoria solo
+                            // quando si esce dal campo, non a ogni carattere.
+                            ->live(onBlur: true)
+                            ->autocomplete(false)
                             ->trim()
                             ->maxLength(255),
 
@@ -43,6 +46,9 @@ class VideoForm
                                 )
                             )
                             ->helperText('Facoltativa: se rimane vuota, viene usato il nome della categoria.')
+                            // Impedisce al browser di copiare automaticamente
+                            // il testo appena inserito nel campo categoria.
+                            ->autocomplete(false)
                             ->trim()
                             ->maxLength(255),
 

@@ -6,7 +6,6 @@ use App\Filament\Resources\Videos\VideoResource;
 use App\Models\Video;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -32,23 +31,6 @@ class VideosTable
                     ->label('Nome')
                     ->searchable()
                     ->sortable(),
-
-                TextColumn::make('currentSource.label')
-                    ->label('Versione corrente')
-                    ->placeholder('Senza versione'),
-
-                TextColumn::make('currentSource.playback_url')
-                    ->label('Link')
-                    ->formatStateUsing(fn (?string $state): string => filled($state) ? 'Apri video' : '—')
-                    ->url(
-                        fn (Video $record): ?string => $record->currentSource?->playback_url,
-                        shouldOpenInNewTab: true,
-                    )
-                    ->placeholder('—'),
-
-                IconColumn::make('is_active')
-                    ->label('Visibile')
-                    ->boolean(),
             ])
             ->recordActions([
                 EditAction::make()

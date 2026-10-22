@@ -11,16 +11,31 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class VideoSourcesRelationManager extends RelationManager
 {
+    // Carica subito la tabella sotto il form di modifica, senza attendere il
+    // caricamento lazy quando la sezione entra nell'area visibile.
+    protected static bool $isLazy = false;
+
     // È il nome del metodo Video::sources(), non il nome della classe né della
     // tabella. Filament lo usa per caricare le versioni del video aperto.
     protected static string $relationship = 'sources';
 
     protected static ?string $title = 'Versioni';
+
+    // Filament, prima di mostrare un Relation Manager, controlla normalmente
+    // la policy del Model collegato (VideoSource). In questo progetto le
+    // versioni non sono una risorsa autonoma: possono essere gestite da chi
+    // può modificare il Video proprietario.
+    public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
+    {
+        return $ownerRecord instanceof Video
+            && Gate::allows('update', $ownerRecord);
+    }
 
     // Definisce i campi usati per inserire una versione. I componenti sono
     // condivisi con la sezione "Prima versione" di CreateVideo.
@@ -38,7 +53,7 @@ class VideoSourcesRelationManager extends RelationManager
             ->recordTitleAttribute('label')
             ->columns([
                 TextColumn::make('label')
-                    ->label('Versione')
+                    ->label('Nome')
                     ->placeholder('Senza nome'),
 
                 TextColumn::make('version_date')
@@ -47,7 +62,7 @@ class VideoSourcesRelationManager extends RelationManager
                     ->sortable(),
 
                 TextColumn::make('provider')
-                    ->label('Provider')
+                    ->label('Tipo')
                     ->badge(),
 
                 TextColumn::make('playback_url')

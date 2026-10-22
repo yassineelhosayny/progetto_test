@@ -37,7 +37,7 @@ class ListVideos extends ListRecords
     }
 
     // Limita la tabella ai video appartenenti al contenitore indicato nella
-    // route. with() precarica relazioni e versione corrente evitando query ripetute.
+    // route. La lista mostra un record per Video, non le singole versioni.
     protected function getTableQuery(): Builder
     {
         return Video::query()
@@ -48,7 +48,6 @@ class ListVideos extends ListRecords
             )
             ->with([
                 'videoSubcategory.videoCategory',
-                'currentSource',
             ]);
     }
 
