@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Videos\Pages;
 
+use App\Filament\Resources\VideoSources\VideoSourceResource;
 use App\Filament\Resources\Videos\VideoResource;
 use App\Models\VideoDemo;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Gate;
@@ -93,6 +95,14 @@ class EditVideo extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('backToVersions')
+                ->label('Torna alle versioni')
+                ->icon('heroicon-o-arrow-left')
+                ->color('gray')
+                ->url(VideoSourceResource::getUrl('index', [
+                    'video' => $this->record,
+                ])),
+
             DeleteAction::make()
                 ->successRedirectUrl(VideoResource::getUrl('index', [
                     'videoDemo' => $this->videoDemoId,

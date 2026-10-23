@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources\Videos\Tables;
 
+use App\Filament\Resources\VideoSources\VideoSourceResource;
 use App\Filament\Resources\Videos\VideoResource;
 use App\Models\Video;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -33,12 +34,13 @@ class VideosTable
                     ->sortable(),
             ])
             ->recordActions([
-                EditAction::make()
-                    // Ricostruisce l'URL con contenitore e video, perché la
-                    // route di modifica richiede entrambi i parametri.
-                    ->url(fn (Video $record): string => VideoResource::getUrl('edit', [
-                        'videoDemo' => $record->videoSubcategory->videoCategory->video_demo_id,
-                        'record' => $record,
+                Action::make('manageVersions')
+                    ->label('Modifica')
+                    ->icon('heroicon-o-pencil-square')
+                    // Apre la Resource delle versioni passando il video come
+                    // query string. La pagina ricava da esso il contenitore.
+                    ->url(fn (Video $record): string => VideoSourceResource::getUrl('index', [
+                        'video' => $record,
                     ])),
 
                 DeleteAction::make(),

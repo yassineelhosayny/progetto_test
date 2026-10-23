@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -66,22 +65,6 @@ class VideoDemo extends Model
     public function categories(): HasMany
     {
         return $this->hasMany(VideoCategory::class);
-    }
-
-    /**
-     * Riproduce il link pubblico del contenitore usato dal progetto originale:
-     * /cliente/contenitore oppure /contenitore quando non c'è un cliente.
-     */
-    protected function publicUrl(): Attribute
-    {
-        return Attribute::get(function (): string {
-            $segments = array_filter([
-                $this->client?->slug,
-                $this->slug,
-            ]);
-
-            return url(implode('/', $segments));
-        });
     }
 
     public function scopeActive(Builder $query): Builder

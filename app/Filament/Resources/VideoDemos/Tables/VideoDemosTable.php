@@ -34,11 +34,12 @@ class VideoDemosTable
                     ->boolean()
                     ->sortable(),
 
-                // Il testo e l'URL sono calcolati dal Model usando gli slug
-                // del cliente e del contenitore, come nel progetto originale.
-                TextColumn::make('public_url')
-                    ->label('Link cliente')
-                    ->url(fn (VideoDemo $record): string => $record->public_url, true)
+                // Questa non è una colonna del database: Filament calcola il link
+                // usando gli slug del cliente e del contenitore.
+                TextColumn::make('client_link')
+                    ->label('Link Cliente')
+                    ->getStateUsing(fn (VideoDemo $record): string => self::makeClientUrl($record))
+                    ->url(fn (VideoDemo $record): string => self::makeClientUrl($record), true)
                     ->openUrlInNewTab()
                     ->copyable()
                     ->wrap(),
@@ -90,5 +91,19 @@ class VideoDemosTable
             ->reorderable('sort_order')
             ->defaultSort('sort_order')
             ->striped();
+    }
+
+    /**
+     * Costruisce il futuro indirizzo pubblico senza salvarlo nel database.
+     */
+    private static function makeClientUrl(VideoDemo $videoDemo): string
+    {
+        $segments = array_filter([
+            'video-demo',
+            $videoDemo->client?->slug,
+            $videoDemo->slug,
+        ]);
+
+        return url(implode('/', $segments));
     }
 }

@@ -2,7 +2,8 @@
 
 namespace App\Filament\Resources\Videos\Pages;
 
-use App\Filament\Resources\Videos\Schemas\VideoSourceForm;
+use App\Filament\Resources\VideoSources\VideoSourceResource;
+use App\Filament\Resources\VideoSources\Schemas\VideoSourceForm;
 use App\Filament\Resources\Videos\VideoResource;
 use App\Models\VideoDemo;
 use Filament\Resources\Pages\CreateRecord;
@@ -82,13 +83,11 @@ class CreateVideo extends CreateRecord
         ]);
     }
 
-    // Dopo la creazione apre la modifica dello stesso video, dove sono
-    // disponibili anche la tabella e le azioni per le versioni.
+    // Dopo la creazione apre la Resource delle versioni dello stesso Video.
     protected function getRedirectUrl(): string
     {
-        return VideoResource::getUrl('edit', [
-            'videoDemo' => $this->videoDemoId,
-            'record' => $this->record,
+        return VideoSourceResource::getUrl('index', [
+            'video' => $this->record,
         ]);
     }
 

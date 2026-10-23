@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Filament\Resources\Videos\Schemas;
+namespace App\Filament\Resources\VideoSources\Schemas;
 
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Get;
+use Illuminate\Validation\Rule;
 
 class VideoSourceForm
 {
@@ -14,7 +15,7 @@ class VideoSourceForm
      *
      * @return array<int, mixed>
      */
-    public static function components(): array
+    public static function components(?int $videoId = null): array
     {
         return [
             Select::make('upload_method')
@@ -49,6 +50,26 @@ class VideoSourceForm
                 })
                 ->visible(fn (Get $get): bool => in_array($get('provider'), ['vimeo', 'youtube'], true))
                 ->required(fn (Get $get): bool => in_array($get('provider'), ['vimeo', 'youtube'], true))
+                // Nella creazione di una nuova versione conosciamo già il
+                // Video proprietario e possiamo intercettare il duplicato
+                // prima che venga raggiunto il vincolo unique del database.
+                ->rules(function (Get $get) use ($videoId): array {
+                    $provider = $get('provider');
+
+                    if ($videoId === null || ! in_array($provider, ['vimeo', 'youtube'], true)) {
+                        return [];
+                    }
+
+                    return [
+                        Rule::unique('video_sources', 'external_id')
+                            ->where(fn ($query) => $query
+                                ->where('video_id', $videoId)
+                                ->where('provider', $provider)),
+                    ];
+                })
+                ->validationMessages([
+                    'unique' => 'Questo ID video è già presente per la piattaforma selezionata.',
+                ])
                 ->trim()
                 ->maxLength(255),
 
@@ -90,7 +111,7 @@ class VideoSourceForm
             'provider' => $data['provider'],
             'label' => filled($data['label'] ?? null) ? trim($data['label']) : null,
             'external_id' => in_array($data['provider'], ['vimeo', 'youtube'], true)
-                ? ($data['external_id'] ?? null)
+                ? trim((string) ($data['external_id'] ?? ''))
                 : null,
             'source_url' => $data['provider'] === 'bunny' ? ($data['source_url'] ?? null) : null,
             'thumbnail_url' => $data['provider'] === 'bunny' ? ($data['thumbnail_url'] ?? null) : null,

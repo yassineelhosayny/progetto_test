@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Videos;
 use App\Filament\Resources\Videos\Pages\CreateVideo;
 use App\Filament\Resources\Videos\Pages\EditVideo;
 use App\Filament\Resources\Videos\Pages\ListVideos;
-use App\Filament\Resources\Videos\RelationManagers\VideoSourcesRelationManager;
 use App\Filament\Resources\Videos\Schemas\VideoForm;
 use App\Filament\Resources\Videos\Tables\VideosTable;
 use App\Models\Video;
@@ -44,13 +43,11 @@ class VideoResource extends Resource
         return VideosTable::configure($table);
     }
 
-    // Mostra le versioni del video nella pagina di modifica. Il Relation
-    // Manager usa la relazione Video::sources().
+    // Le versioni sono gestite dalla Resource autonoma VideoSourceResource,
+    // quindi questo Resource non utilizza Relation Manager.
     public static function getRelations(): array
     {
-        return [
-            VideoSourcesRelationManager::class,
-        ];
+        return [];
     }
 
     // Le route restano quelle standard di Filament. L'ID del contenitore non
